@@ -1,0 +1,47 @@
+#!/bin/bash
+pcpath="/opt/pastecat/"
+
+doInstall() {
+	if isInstall
+	then
+		echo "Pastecat is already installed."
+		return
+	fi
+	
+	# Aqui hauriem de fer tot el tema de la instalacio.
+	# Com que ens falten els binaris, de moment baixem l'arxiu, creem
+	# el directori, movem el zip i sortim.
+
+	# Creating directory and switching
+	mkdir -p $pcpath && cd $pcpath
+
+	# Getting file
+	wget https://github.com/mvdan/pastecat/archive/v0.2.2.zip
+
+	# Si es tinguessim el binari, només haurem de fer:
+	# unzip v0.2.2.zip
+
+	cd -
+}
+
+isInstalled() {
+	[ -d $pcpath ] && return 0
+	return 1
+}
+
+doHelp() {
+	echo "Nope"
+	return
+}
+
+if [ $# -lt 1 ]
+then
+	doHelp
+fi
+
+case $1 in
+	"install")
+		shift
+		doInstall $@
+		;;
+esac
