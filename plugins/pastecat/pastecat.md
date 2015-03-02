@@ -33,6 +33,14 @@ from upstream over HTTPS and preferably with digests or signatures. We can use
 Github's releases page for that. Both options leave us with an executable file
 that we should be able to run directly on Cloudy.
 
+In this particular case We will download the binaries from the git repository
+with the following command line:
+
+    wget https://github.com/mvdan/pastecat/releases/download/v0.3.0/pastecat_linux_386
+
+Note that in this case we are downloading a specific version for a Linux with a 386
+architecture. 
+
 Note that having the service as a Debian package has many advantages:
 
 * Updates are simple and need no extra work from Cloudy
@@ -100,9 +108,9 @@ idea to keep the service's files under `/opt/SERVICENAME`.
 In our particular case, the first thing we need to do is downloading the
 binary from the release. In order to do this we will make use of the mentioned
 `wget` command. Given a URL to a file, this command allows us to download this
-file in our system, and this is what we will do in our system:
+file in our system, and this is what we will do in our system (as mentioned before):
 
-    wget https://github.com/mvdan/pastecat/archive/v0.2.2.zip
+    wget https://github.com/mvdan/pastecat/releases/download/v0.3.0/pastecat_linux_386
 
 Once we have the binary, we just need to move it to a directory where executable
 files use to be located. In our case, we will use the directory /opt/pastecat/.

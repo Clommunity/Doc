@@ -1,4 +1,10 @@
 #!/bin/bash
+PCPATH="/opt/pastecat/"
+PCPROG="pastecat"
+LOGFILE="/dev/null"
+PCUSER="nobody"
+DEBUG=1
+
 pcpath="/opt/pastecat/"
 
 doInstall() {
@@ -15,13 +21,34 @@ doInstall() {
 	# Creating directory and switching
 	mkdir -p $pcpath && cd $pcpath
 
-	# Getting file
-	wget https://github.com/mvdan/pastecat/archive/v0.2.2.zip
+	# Aqui s'hauria de fer un switch segons l'arquitectura i descarregar l'adient
+
+    # Getting file
+    wget https://github.com/mvdan/pastecat/releases/download/v0.3.0/pastecat_linux_386
+
+	# Changing name so controller can invoke it generically
+	mv pastecat_linux_386 pastecat
+    chmod +x pastecat_linux_386
 
 	# Si es tinguessim el binari, només haurem de fer:
 	# unzip v0.2.2.zip
 
 	cd -
+}
+
+doServer() {
+	# Turning machine into a server
+
+	local port=${1:-""}
+	local description=${2:-""}
+	local ip="127.0.0.1"
+
+	cmd='su '$PCUSER' -c "{ '$PCPATH$PCPROG' -u http://'$ip':'$port' > '$LOGFILE' 2>&1 & }; echo \$!"'
+	[ $DEBUG ] && echo $cmd
+	pidpc=$(eval $cmd)			# Not sure if necessary to keep PID for now...
+	[ $DEBUG ] && echo "PID: $pidpc"
+
+	return
 }
 
 isInstalled() {
@@ -43,5 +70,9 @@ case $1 in
 	"install")
 		shift
 		doInstall $@
+		;;
+	"publish")
+		shift
+		doServer
 		;;
 esac
