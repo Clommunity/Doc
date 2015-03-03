@@ -92,7 +92,14 @@ function _pcsource($port, $description) {
 	$cmd = $pcutils." publish $port $description";
 	execute_program_detached($cmd);
 
-	# ここからavahiの事が始めます。
+	// ここからavahiの事が始めます。
+
+	$temp = avahi_publish($avahi_type, $description, $port, "");
+	$page .= ptxt($temp);
+
+	$page .= addButton(array('label'=>t('Back'),'href'=>$staticFile.'/pastecat'));
+
+    return($page);
 }
 
 function isPCInstalled(){
