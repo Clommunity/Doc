@@ -118,22 +118,74 @@ To move these files through our system we will use the command `mv`. However,
 first of all we need to create the directory where we will place our binary. To
 do this we use the `mkdir` command as is shown below:
 
-   mkdir -p /opt/pastecat
+   mkdir -p /opt/pastecat/
 
 Once we have our directory created, it is time to move the binary there:
 
-    mv current_directory/v0.2.2.zip /opt/pastecat
+    mv current_directory/pastecat_linux_386 /opt/pastecat/
 
 where current\_directory is the directory where we previously downloaded the
-binary.
+binary. Since the binary name depends on the architecture, in order to simplfy
+the controller's code, we will change its name to something more simple:
+
+    mv /opt/pastecat/pastecat_linux_386 /opt/pastecat/pastecat
+
+Now our binary is called `pastecat` insted of `pastecat_linux_386`
 
 These steps are the minimum requiered to install a service which is not provided
-in the Debian official repositories. However, to an end user, it could look like a
+in the Debian official repositories. However, to an end user, it would look like a
 nightmare to run these commands in a console connected through ssh to its device,
 so what we are going to do now, is create a bash script which will be called later
 from the web interface by clicking a button.
 
-AQUI HEM DE FER LO DEL BOTO EN EL HTML AMB LES FUNCIONS DE MIRAR SI LA CARPETA EXISTEIX I ETC...
+This script is the first version of the pastecat controller. For the time being, We
+will just include a function to install pastecat in a device. Later we will include
+some other functions to add more facilities to our service.
+
+
+    #!/bin/bash
+    PCPATH="/opt/pastecat/"
+    PCPROG="pastecat"
+    LOGFILE="/dev/null"
+    PCUSER="nobody"
+    
+    pcpath="/opt/pastecat/"
+    
+    doInstall() {
+        if isInstall
+        then
+            echo "Pastecat is already installed."
+            return
+        fi
+    
+        # Creating directory and switching
+        mkdir -p $pcpath && cd $pcpath
+    
+        # Getting file
+        wget https://github.com/mvdan/pastecat/releases/download/v0.3.0/pastecat_linux_386
+    
+        # Changing name so controller can invoke it generically
+        mv pastecat_linux_386 pastecat
+        chmod +x pastecat
+        
+        cd -
+    }
+
+    isInstalled() {
+        [ -d $pcpath ] && return 0
+        return 1
+    }
+    
+    
+    case $1 in
+        "install")
+            shift
+            doInstall $@
+            ;;
+    esac
+
+We can see how the lasts steps are done within the same function, allowing us to
+install the software in the device.
 
 ## 4 Avahi service publishing
 

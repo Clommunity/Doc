@@ -59,6 +59,28 @@ function publish_post() {
     return(array('type' => 'render','page' => $page));                                                                                                
 }
 
+function commit_get() {
+	global $pcpath,$title;
+    global $staticFile;
+
+	$page = hlc(t($title));
+
+	$page .= createForm(array('class'=>'form-horizontal'));
+	$page .= addInput('ip',t('Server IP'));
+	$page .= addInput('port',t('Server port:'));
+
+	//Place textbox here
+
+	$page .= addSubmit(array('label'=>t('Publish'),'class'=>'btn btn-primary'));
+    $page .= addButton(array('label'=>t('Cancel'),'href'=>$staticFile.'/peerstreamer'));	
+	return(array('type' => 'render','page' => $page));
+}
+
+function commit_post() {
+	//Parse get inputs and commit to the server
+	
+}
+
 function _pcsource($port, $description) {
 	global $pcpath,$pcprogram,$title,$pcutils,$avahi_type;
 
