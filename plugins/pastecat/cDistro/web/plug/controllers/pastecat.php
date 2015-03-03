@@ -16,16 +16,16 @@ function index(){
 	$page .= hl(t("Minimalist pastebin engine written in Go"),4);
 	$page .= par(t("A simple and self-hosted pastebin service written in Go").' '.t("Can use a variety of storage backends").' '.t(" Designed to optionally remove pastes after a certain period of time.").' '.("If using a persistent storage backend, pastes will be kept between runs.").' '.t("This software runs the").' '."<a href='http://paste.cat'>".t("paste.cat")."</a>". t(" public service."));
 
-	if ( ! isPCInstalled() ) {                                                                                                                                        
+	if ( ! isPCInstalled() ) {
 		$page .= "<div class='alert alert-error text-center'>".t("Pastecat is not installed")."</div>\n";
 		$page .= par(t("Click on the button to install Pastecat"));
 		$buttons .= addButton(array('label'=>t("Install Pastecat"),'class'=>'btn btn-success', 'href'=>$staticFile.'/pastecat/install'));
 		$page .= $buttons;
 	} else {
 		$page .= "<div class='alert alert-success text-center'>".t("Pastecat is installed")."</div>\n";
+		$page .= addButton(array('label'=>t('Commit a text'),'href'=>$staticFile.'/pastecat/commit'));
 		$page .= addButton(array('label'=>t('Create a Pastecat server'),'href'=>$staticFile.'/pastecat/publish'));
 	}
-
 
 	return(array('type' => 'render','page' => $page));
 }

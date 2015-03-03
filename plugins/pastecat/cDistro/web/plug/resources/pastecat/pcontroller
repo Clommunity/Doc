@@ -3,7 +3,6 @@ PCPATH="/opt/pastecat/"
 PCPROG="pastecat"
 LOGFILE="/dev/null"
 PCUSER="nobody"
-DEBUG=1
 
 pcpath="/opt/pastecat/"
 
@@ -13,10 +12,6 @@ doInstall() {
 		echo "Pastecat is already installed."
 		return
 	fi
-	
-	# Aqui hauriem de fer tot el tema de la instalacio.
-	# Com que ens falten els binaris, de moment baixem l'arxiu, creem
-	# el directori, movem el zip i sortim.
 
 	# Creating directory and switching
 	mkdir -p $pcpath && cd $pcpath
@@ -28,10 +23,7 @@ doInstall() {
 
 	# Changing name so controller can invoke it generically
 	mv pastecat_linux_386 pastecat
-    chmod +x pastecat_linux_386
-
-	# Si es tinguessim el binari, només haurem de fer:
-	# unzip v0.2.2.zip
+    chmod +x pastecat
 
 	cd -
 }
@@ -43,10 +35,20 @@ doServer() {
 	local description=${2:-""}
 	local ip="127.0.0.1"
 
+	# Creating directory with nobody permissions
+	mkdir -p "/var/local/pastecat"
+	chmod 777 "/var/local/pastecat" && cd "/var/local/pastecat"
+
+	# Running pastecat 
 	cmd='su '$PCUSER' -c "{ '$PCPATH$PCPROG' -u http://'$ip':'$port' > '$LOGFILE' 2>&1 & }; echo \$!"'
-	[ $DEBUG ] && echo $cmd
+	echo $cmd
 	pidpc=$(eval $cmd)			# Not sure if necessary to keep PID for now...
-	[ $DEBUG ] && echo "PID: $pidpc"
+	echo "PID: $pidpc"
+
+	cd -
+
+	# Using the PID, we could carry on process control so if the pastecat process die, we can also
+	# stop the avahi process to avoid "false connections"
 
 	return
 }
@@ -73,6 +75,6 @@ case $1 in
 		;;
 	"publish")
 		shift
-		doServer
+		doServer $@
 		;;
 esac
