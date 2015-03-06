@@ -81,19 +81,21 @@ function commit_post() {
 	
 }
 
-function _pcsource($port, $description) {
+function _pcsource($port,$description) {
 	global $pcpath,$pcprogram,$title,$pcutils,$avahi_type;
 
 	$page = "";
     $device = getCommunityDev()['output'][0];
+	$ipserver = getCommunityIP()['output'][0];
 
     if ($description == "") $description = $type;
 
-	$cmd = $pcutils." publish $port $description";
+	$cmd = $pcutils." publish '$port' '$description' '$ipserver'";
 	execute_program_detached($cmd);
 
-	// ここからavahiの事が始めます。
-
+	$page .= t($ipserver);
+	$page .= par(t('Published this server.'));
+	$description = str_replace(' ', '', $description);
 	$temp = avahi_publish($avahi_type, $description, $port, "");
 	$page .= ptxt($temp);
 

@@ -33,7 +33,9 @@ doServer() {
 
 	local port=${1:-""}
 	local description=${2:-""}
-	local ip="127.0.0.1"
+	local ip=${3:-"0.0.0.0"}
+
+	echo $port $description $ip
 
 	# Creating directory with nobody permissions
 	mkdir -p "/var/local/pastecat"
