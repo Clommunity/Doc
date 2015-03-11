@@ -187,6 +187,78 @@ some other functions to add more facilities to our service.
 We can see how the lasts steps are done within the same function, allowing us to
 install the software in the device.
 
+### 3.3 Making the controller use Pastecat
+
+The next thing we want is our software to be used through the web interface. In 
+order to do this, we will include a new option to the main page of pastecat, and
+also integrate a new function to the controller script to manage the binary. We
+will add the button like this:
+
+    $page .= addButton(array('label'=>t('Create a Pastecat server'),'href'=>$staticFile.'/pastecat/publish'));
+
+after the `Pastecat is installed` message. The next thing will be implementing the
+function `publish` in the same PHP. This function is the responsible of calling the
+appropiate function in the controller and to announce our server usign the avahi
+technology. The difference with this function is that it requieres a form to
+introduce data, so in the end we will have a total of 2 functions: a get and a post:
+
+    function publish_get() {
+        global $pcpath,$title;
+        global $staticFile;
+    
+        $page = hlc(t($title));
+        $page .= hlc(t('Publish a pastecat server'),2);
+        $page .= par(t("Write the port to publish your Pastecat service"));
+        $page .= createForm(array('class'=>'form-horizontal'));
+        $page .= addInput('port',t('Port Address'));
+        $page .= addInput('description',t('Describe this server'));
+        $page .= addSubmit(array('label'=>t('Publish'),'class'=>'btn btn-primary'));
+        $page .= addButton(array('label'=>t('Cancel'),'href'=>$staticFile.'/peerstreamer'));
+    
+        return(array('type' => 'render','page' => $page));
+    }
+    
+    function publish_post() {
+        $port = $_POST['port'];
+        $description = $_POST['description'];
+        $ip = "";
+    
+        $page = "<pre>";
+        $page .= _pcsource($port,$description);
+        $page .= "</pre>";
+    
+        return(array('type' => 'render','page' => $page));
+    }
+
+As we can see, in the `post` function we are invoking another function. The reason
+to do this is to write a more simple and modular code. In this function, we are 
+finally calling the script:
+
+    function _pcsource($port,$description) {
+        global $pcpath,$pcprogram,$title,$pcutils,$avahi_type;
+    
+        $page = "";
+        $device = getCommunityDev()['output'][0];
+        $ipserver = getCommunityIP()['output'][0];
+    
+        if ($description == "") $description = $type;
+    
+        $cmd = $pcutils." publish '$port' '$description' '$ipserver'";
+        execute_program_detached($cmd);
+    
+        $page .= t($ipserver);
+        $page .= par(t('Published this server.'));
+        $description = str_replace(' ', '', $description);
+        $temp = avahi_publish($avahi_type, $description, $port, "");
+        $page .= ptxt($temp);
+    
+        $page .= addButton(array('label'=>t('Back'),'href'=>$staticFile.'/pastecat'));
+    
+        return($page)
+    }
+
+The next thing to do will be create the function `publish` in the controller
+    
 ## 4 Avahi service publishing
 
 On of the best things in Cloudy is the facility of publishing our service as a
