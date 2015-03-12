@@ -145,11 +145,6 @@ some other functions to add more facilities to our service.
 
     #!/bin/bash
     PCPATH="/opt/pastecat/"
-    PCPROG="pastecat"
-    LOGFILE="/dev/null"
-    PCUSER="nobody"
-    
-    pcpath="/opt/pastecat/"
     
     doInstall() {
         if isInstall
@@ -257,8 +252,71 @@ finally calling the script:
         return($page)
     }
 
-The next thing to do will be create the function `publish` in the controller
+The next thing to do will be create the function `publish` in the controller, so we will
+add a new function to the basic controller we had back at section __3.2__. We will add
+a new flag called publish, so the first executed part of the script will look like this:
+
+    if [ $# -lt 1 ]
+    then
+        doHelp
+    fi
     
+    case $1 in
+        "install")
+            shift
+            doInstall $@
+            ;;
+        "publish")
+            shift
+            doServer $@
+            ;;
+    esac
+
+As we can see, when the script's first argument is `publish`, we shift the rest of arguments
+and call the function `doServer`. In this function, we must start the service with the requiered
+arguments, so the first thing we'll do is put the arguments into local variables. Once we do that
+the common thing would be to launche the Pastecat server, but since it might be called with root
+permissions (and this is bad) we must run it as a `nobody` user. The issue is that the `nobody`
+user has merely no permissions... and pastecat need some permissions to create folders and text
+files. In order to allow the `nobody` user to do that, first of all we will create a folder
+and grant permissions to almost everyone to it. We will use `chmod` again. Now, the user can
+create files and directories within this directory, so we can now run pastecat. Finally, we keep
+the pid in a variable in case we want to use it in later updates:
+
+    doServer() {
+        # Turning machine into a server
+    
+        local port=${1:-""}
+        local description=${2:-""}
+        local ip=${3:-"0.0.0.0"}
+    
+        # Creating directory with nobody permissions
+        mkdir -p "/var/local/pastecat"
+        chmod 777 "/var/local/pastecat" && cd "/var/local/pastecat"
+    
+        # Running pastecat 
+        cmd='su '$PCUSER' -c "{ '$PCPATH$PCPROG' -u http://'$ip':'$port' > '$LOGFILE' 2>&1 & }; echo \$!"'
+        pidpc=$(eval $cmd)          # Not sure if necessary to keep PID for now...
+    
+        cd -
+    
+        # Using the PID, we could carry on process control so if the pastecat process die, we can also
+        # stop the avahi process to avoid "false connections"
+    
+        return
+    }
+
+Note that we are using some global variables that were not defined before such as `PCUSER` and `LOGFILE`. By
+default, we set these variables like this:
+
+    PCPATH="/opt/pastecat/"
+    PCPROG="pastecat"
+    LOGFILE="/dev/null"
+    PCUSER="nobody
+
+Now we can create a pastecat instance server. However, there is still something missing: make the other
+users see our service. And this is why we are using avahi.
+
 ## 4 Avahi service publishing
 
 On of the best things in Cloudy is the facility of publishing our service as a
