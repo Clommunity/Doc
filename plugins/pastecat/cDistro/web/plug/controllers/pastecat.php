@@ -23,7 +23,7 @@ function index(){
 		$page .= $buttons;
 	} else {
 		$page .= "<div class='alert alert-success text-center'>".t("Pastecat is installed")."</div>\n";
-		$page .= addButton(array('label'=>t('Commit a text'),'href'=>$staticFile.'/pastecat/commit'));
+		$page .= addButton(array('label'=>t('Go to a Server'),'href'=>$staticFile.'/pastecat/commit'));
 		$page .= addButton(array('label'=>t('Create a Pastecat server'),'href'=>$staticFile.'/pastecat/publish'));
 	}
 
@@ -72,12 +72,13 @@ function commit_get() {
 	//Place textbox here
 
 	$page .= addSubmit(array('label'=>t('Publish'),'class'=>'btn btn-primary'));
-    $page .= addButton(array('label'=>t('Cancel'),'href'=>$staticFile.'/peerstreamer'));	
+    $page .= addButton(array('label'=>t('Cancel'),'href'=>$staticFile.'/pastecat'));	
 	return(array('type' => 'render','page' => $page));
 }
 
 function commit_post() {
-	//Parse get inputs and commit to the server
+		//Go to pastecat server page (ez?)
+		//goto $ip:$port or something similar
 	
 }
 
