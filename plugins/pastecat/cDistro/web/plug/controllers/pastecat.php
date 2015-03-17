@@ -3,6 +3,7 @@
 $title="Pastecat";
 $pcpath="/opt/pastecat/";
 $pcprogram="pastecat";
+$pcfile="/var/run/pc.info"
 
 $avahi_type="pastecat";
 
@@ -77,9 +78,7 @@ function commit_get() {
 }
 
 function commit_post() {
-		//Go to pastecat server page (ez?)
-		//goto $ip:$port or something similar
-	
+	// Here we must take the info from the file and connect to our server
 }
 
 function _pcsource($port,$description) {

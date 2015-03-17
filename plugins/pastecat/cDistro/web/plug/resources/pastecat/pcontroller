@@ -3,6 +3,7 @@ PCPATH="/opt/pastecat/"
 PCPROG="pastecat"
 LOGFILE="/dev/null"
 PCUSER="nobody"
+PCFILE="/var/run/pc.info"
 
 doInstall() {
 	if isInstall
@@ -45,6 +46,10 @@ doServer() {
 
 	# Using the PID, we could carry on process control so if the pastecat process die, we can also
 	# stop the avahi process to avoid "false connections"
+
+	# Writting server info to file
+	info="$pidpc http://$ip:$port"			# Separator is space character
+	echo $info > $PCFILE
 
 	return
 }
