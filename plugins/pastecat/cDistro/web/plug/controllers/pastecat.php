@@ -3,7 +3,8 @@
 $title="Pastecat";
 $pcpath="/opt/pastecat/";
 $pcprogram="pastecat";
-$pcfile="/var/run/pc.info"
+$pcfile="/var/run/pc.info";
+$port="4747";
 
 $avahi_type="pastecat";
 
@@ -24,11 +25,37 @@ function index(){
 		$page .= $buttons;
 	} else {
 		$page .= "<div class='alert alert-success text-center'>".t("Pastecat is installed")."</div>\n";
-		$page .= addButton(array('label'=>t('Go to a Server'),'href'=>$staticFile.'/pastecat/commit'));
+		if ( isRunning() ) {
+			$page .= addButton(array('label'=>t('Go to server'),'href'=>$staticFile.'/pastecat/commit'));
+			$page .= addButton(array('label'=>t('Stop server'),'href'=>$staticFile.'/pastecat/stop'));
+		}
 		$page .= addButton(array('label'=>t('Create a Pastecat server'),'href'=>$staticFile.'/pastecat/publish'));
 	}
 
 	return(array('type' => 'render','page' => $page));
+}
+
+function stop() {
+	// Stops Pastecat server
+	global $pcpath,$pcprogram,$title,$pcutils,$avahi_type,$port;
+
+    $page = "";
+    $cmd = $pcutils." stop ";
+    execute_program_detached($cmd);
+
+	$temp = avahi_unpublish($avahi_type, $port);
+    $flash = ptxt($temp);
+    setFlash($flash);
+
+    return(array('type'=>'redirect','url'=>$staticFile.'/peerstreamer'));
+
+}
+
+function isRunning() {
+	// Returns whether pastecat is running or not
+	global $pcpath;
+
+    return(file_exists($pcfile));	
 }
 
 
@@ -40,7 +67,6 @@ function publish_get() {
     $page .= hlc(t('Publish a pastecat server'),2);
     $page .= par(t("Write the port to publish your Pastecat service"));
     $page .= createForm(array('class'=>'form-horizontal'));
-    $page .= addInput('port',t('Port Address'));
     $page .= addInput('description',t('Describe this server'));
     $page .= addSubmit(array('label'=>t('Publish'),'class'=>'btn btn-primary'));
     $page .= addButton(array('label'=>t('Cancel'),'href'=>$staticFile.'/peerstreamer'));
@@ -49,12 +75,11 @@ function publish_get() {
 }
 
 function publish_post() {
-    $port = $_POST['port'];
     $description = $_POST['description'];
     $ip = "";
 
     $page = "<pre>";
-    $page .= _pcsource($port,$description);
+    $page .= _pcsource($description);
     $page .= "</pre>";
 
     return(array('type' => 'render','page' => $page));                                                                                                
@@ -81,8 +106,8 @@ function commit_post() {
 	// Here we must take the info from the file and connect to our server
 }
 
-function _pcsource($port,$description) {
-	global $pcpath,$pcprogram,$title,$pcutils,$avahi_type;
+function _pcsource($description) {
+	global $pcpath,$pcprogram,$title,$pcutils,$avahi_type,$port;
 
 	$page = "";
     $device = getCommunityDev()['output'][0];
