@@ -26,8 +26,11 @@ function index(){
 	} else {
 		$page .= "<div class='alert alert-success text-center'>".t("Pastecat is installed")."</div>\n";
 		if ( isRunning() ) {
+			$page .= "<div class='alert alert-success text-center'>".t("Pastecat is running")."</div>\n";
 			$page .= addButton(array('label'=>t('Go to server'),'href'=>$staticFile.'/pastecat/commit'));
 			$page .= addButton(array('label'=>t('Stop server'),'href'=>$staticFile.'/pastecat/stop'));
+		} else  {
+			$page .= "<div class='alert alert-error text-center'>".t("Pastecat is not running")."</div>\n";
 		}
 		$page .= addButton(array('label'=>t('Create a Pastecat server'),'href'=>$staticFile.'/pastecat/publish'));
 	}
@@ -53,7 +56,7 @@ function stop() {
 
 function isRunning() {
 	// Returns whether pastecat is running or not
-	global $pcpath;
+	global $pcfile;
 
     return(file_exists($pcfile));	
 }
