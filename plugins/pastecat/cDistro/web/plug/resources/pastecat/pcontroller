@@ -32,20 +32,19 @@ doServer() {
 
 	if [ $# -lt 2 ]
 	then
-		echo "publish <port> [description] [ip]"
+		echo "$0 publish <port> [description]"
 		return
 	fi
 
 	local port=${1:-""}
 	local description=${2:-""}
-	local ip=${3:-"0.0.0.0"}
 
 	# Creating directory with nobody permissions
 	mkdir -p "/var/local/pastecat"
 	chmod 777 "/var/local/pastecat" && cd "/var/local/pastecat"
 
 	# Running pastecat 
-	cmd='su '$PCUSER' -c "{ '$PCPATH$PCPROG' -u http://'$ip':'$port' > '$LOGFILE' 2>&1 & }; echo \$!"'
+	cmd='su '$PCUSER' -c "{ '$PCPATH$PCPROG' -l :'$port' > '$LOGFILE' 2>&1 & }; echo \$!"'
 	pidpc=$(eval $cmd)			# Not sure if necessary to keep PID for now...
 
 	cd -

@@ -11,7 +11,7 @@ $avahi_type="pastecat";
 $pcutils=dirname(__FILE__)."/../resources/pastecat/pcontroller";
 
 function index(){
-	global $paspath,$title;
+	global $paspath,$title,$port;
 	global $staticFile;
 
 	$page=hlc(t($title));
@@ -27,7 +27,7 @@ function index(){
 		$page .= "<div class='alert alert-success text-center'>".t("Pastecat is installed")."</div>\n";
 		if ( isRunning() ) {
 			$page .= "<div class='alert alert-success text-center'>".t("Pastecat is running")."</div>\n";
-			$page .= addButton(array('label'=>t('Go to server'),'href'=>$staticFile.'/pastecat/commit'));
+			$page .= addButton(array('label'=>t('Go to server'),'href'=>'http://'. getCommunityIP()['output'][0] .':'. $port));
 			$page .= addButton(array('label'=>t('Stop server'),'href'=>$staticFile.'/pastecat/stop'));
 		} else  {
 			$page .= "<div class='alert alert-error text-center'>".t("Pastecat is not running")."</div>\n";
@@ -50,7 +50,7 @@ function stop() {
     $flash = ptxt($temp);
     setFlash($flash);
 
-    return(array('type'=>'redirect','url'=>$staticFile.'/peerstreamer'));
+    return(array('type'=>'redirect','url'=>$staticFile.'/pastecat'));
 
 }
 
@@ -118,7 +118,7 @@ function _pcsource($description) {
 
     if ($description == "") $description = $type;
 
-	$cmd = $pcutils." publish '$port' '$description' '$ipserver'";
+	$cmd = $pcutils." publish '$port' '$description';
 	execute_program_detached($cmd);
 
 	$page .= t($ipserver);
