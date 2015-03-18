@@ -88,27 +88,6 @@ function publish_post() {
     return(array('type' => 'render','page' => $page));                                                                                                
 }
 
-function commit_get() {
-	global $pcpath,$title;
-    global $staticFile;
-
-	$page = hlc(t($title));
-
-	$page .= createForm(array('class'=>'form-horizontal'));
-	$page .= addInput('ip',t('Server IP'));
-	$page .= addInput('port',t('Server port:'));
-
-	//Place textbox here
-
-	$page .= addSubmit(array('label'=>t('Publish'),'class'=>'btn btn-primary'));
-    $page .= addButton(array('label'=>t('Cancel'),'href'=>$staticFile.'/pastecat'));	
-	return(array('type' => 'render','page' => $page));
-}
-
-function commit_post() {
-	// Here we must take the info from the file and connect to our server
-}
-
 function _pcsource($description) {
 	global $pcpath,$pcprogram,$title,$pcutils,$avahi_type,$port;
 

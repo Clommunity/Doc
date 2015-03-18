@@ -70,7 +70,7 @@ the time being, we'll need to create a total of 2 scripts: `pastecat.php` and
 that renders the page and has all the information such as buttons or redirections.
 The other one is what allows our service to show up in the upper menu of Cloudy.
 
-The menu script will look like this:
+The menu code will look like this:
 
 
     <?php
