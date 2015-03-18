@@ -368,7 +368,7 @@ new file called `pastecat.avahi.php` which will contain this:
     function fpcserver($dates){
         global $staticFile;
     
-        return ("<a class='btn' href='".$staticFile."/pastecat/commit" . "?ip=" . $dates['ip'] ."&port=".$dates['port']."'>Go to server</a>  ");
+        return ("<a class='btn' href='http://" .$dates['ip'] .":". $dates['port']."'>Go to server</a>  ");
     }
 
 This will create a button besides the avahi announcement line that will point to
