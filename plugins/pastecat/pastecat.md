@@ -238,14 +238,11 @@ finally calling the script:
     
         if ($description == "") $description = $type;
     
-        $cmd = $pcutils." publish '$port' '$description' '$ipserver'";
+        $cmd = $pcutils." publish '$port' '$description'";
         execute_program_detached($cmd);
     
         $page .= t($ipserver);
         $page .= par(t('Published this server.'));
-        $description = str_replace(' ', '', $description);
-        $temp = avahi_publish($avahi_type, $description, $port, "");
-        $page .= ptxt($temp);
     
         $page .= addButton(array('label'=>t('Back'),'href'=>$staticFile.'/pastecat'));
     
@@ -295,7 +292,7 @@ the pid in a variable in case we want to use it in later updates:
         chmod 777 "/var/local/pastecat" && cd "/var/local/pastecat"
     
         # Running pastecat 
-        cmd='su '$PCUSER' -c "{ '$PCPATH$PCPROG' -u http://'$ip':'$port' > '$LOGFILE' 2>&1 & }; echo \$!"'
+        cmd='su '$PCUSER' -c "{ '$PCPATH$PCPROG' -l :'$port' > '$LOGFILE' 2>&1 & }; echo \$!"'
         pidpc=$(eval $cmd)          # Not sure if necessary to keep PID for now...
     
         cd -
@@ -315,11 +312,65 @@ default, we set these variables like this:
     PCUSER="nobody
 
 Now we can create a pastecat instance server. However, there is still something missing: make the other
-users see our service. And this is why we are using avahi.
+users see our service. And this is why we are using avahi. 
 
 ## 4 Avahi service publishing
 
 On of the best things in Cloudy is the facility of publishing our service as a
 publication in the avahi network, allowing other users to know what we are
-offering and joining our service. To make our new service visible in avahi we
-need to create some files.
+offering and joining our service. To do this, we first need to add a few lines
+to the php controller, just after we've called the controller to start the 
+pastecat instance. We will add the following lines:
+
+    $description = str_replace(' ', '', $description);
+    $temp = avahi_publish($avahi_type, $description, $port, "");
+    $page .= ptxt($temp);
+
+So in the end our function will look like this:
+
+    function _pcsource($port,$description) {
+        global $pcpath,$pcprogram,$title,$pcutils,$avahi_type;
+    
+        $page = "";
+        $device = getCommunityDev()['output'][0];
+        $ipserver = getCommunityIP()['output'][0];
+    
+        if ($description == "") $description = $type;
+    
+        $cmd = $pcutils." publish '$port' '$description'";
+        execute_program_detached($cmd);
+    
+        $page .= t($ipserver);
+        $page .= par(t('Published this server.'));
+        $description = str_replace(' ', '', $description);
+        $temp = avahi_publish($avahi_type, $description, $port, "");
+        $page .= ptxt($temp);
+    
+        $page .= addButton(array('label'=>t('Back'),'href'=>$staticFile.'/pastecat'));
+    
+        return($page)
+    }
+    
+With this simple step, we announced our service in the avahi network. However
+the work does not end here, there is still one more thing to do: create a button
+and program it so when clicked, it directly goes to our pastecat server.
+
+To do this there is a folder called `avahi` within the `plug` directory. The
+scripts that define the function carried on when the button is clicked are
+defined in different files within this directory, therefor we will create a
+new file called `pastecat.avahi.php` which will contain this:
+
+    <?php
+    // plug/avahi/pastecat.avahi.php
+    
+    addAvahi('pastecat','fpcserver');
+    
+    function fpcserver($dates){
+        global $staticFile;
+    
+        return ("<a class='btn' href='".$staticFile."/pastecat/commit" . "?ip=" . $dates['ip'] ."&port=".$dates['port']."'>Go to server</a>  ");
+    }
+
+This will create a button besides the avahi announcement line that will point to
+our server.
+
