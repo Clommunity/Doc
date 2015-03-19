@@ -184,6 +184,8 @@ install the software in the device.
 
 ### 3.3 Making the controller use Pastecat
 
+## 3.3.1 Start the service
+
 The next thing we want is our software to be used through the web interface. In 
 order to do this, we will include a new option to the main page of pastecat, and
 also integrate a new function to the controller script to manage the binary. We
@@ -205,7 +207,6 @@ introduce data, so in the end we will have a total of 2 functions: a get and a p
         $page .= hlc(t('Publish a pastecat server'),2);
         $page .= par(t("Write the port to publish your Pastecat service"));
         $page .= createForm(array('class'=>'form-horizontal'));
-        $page .= addInput('port',t('Port Address'));
         $page .= addInput('description',t('Describe this server'));
         $page .= addSubmit(array('label'=>t('Publish'),'class'=>'btn btn-primary'));
         $page .= addButton(array('label'=>t('Cancel'),'href'=>$staticFile.'/peerstreamer'));
@@ -219,7 +220,7 @@ introduce data, so in the end we will have a total of 2 functions: a get and a p
         $ip = "";
     
         $page = "<pre>";
-        $page .= _pcsource($port,$description);
+        $page .= _pcsource($description);
         $page .= "</pre>";
     
         return(array('type' => 'render','page' => $page));
@@ -230,7 +231,7 @@ to do this is to write a more simple and modular code. In this function, we are
 finally calling the script:
 
     function _pcsource($port,$description) {
-        global $pcpath,$pcprogram,$title,$pcutils,$avahi_type;
+        global $pcpath,$pcprogram,$title,$pcutils,$avahi_type,$port;
     
         $page = "";
         $device = getCommunityDev()['output'][0];
@@ -238,7 +239,7 @@ finally calling the script:
     
         if ($description == "") $description = $type;
     
-        $cmd = $pcutils." publish '$port' '$description'";
+        $cmd = $pcutils." publish '$port' '$description';
         execute_program_detached($cmd);
     
         $page .= t($ipserver);
@@ -293,7 +294,7 @@ the pid in a variable in case we want to use it in later updates:
     
         # Running pastecat 
         cmd='su '$PCUSER' -c "{ '$PCPATH$PCPROG' -l :'$port' > '$LOGFILE' 2>&1 & }; echo \$!"'
-        pidpc=$(eval $cmd)          # Not sure if necessary to keep PID for now...
+        pidpc=$(eval $cmd)          # keeping PID for future needs...
     
         cd -
     
@@ -310,9 +311,98 @@ default, we set these variables like this:
     PCPROG="pastecat"
     LOGFILE="/dev/null"
     PCUSER="nobody
+    
+## 3.3.2 Stop the service
 
-Now we can create a pastecat instance server. However, there is still something missing: make the other
-users see our service. And this is why we are using avahi. 
+Sometimes, we may also want to stop out service, so we will provide a button to do so.
+The first thing would be creating the button, but if we think a little, we will figure
+out that before doing this, we need a way to know if our service is running. In addition,
+we also need a way to stop our service. Since we are running on Linux, we can easily
+achieve that by using the `kill` command. The thing is that to use this command, we need
+the Process ID (PID). Luckily for us, we already kept this number when we created the
+pastecat server with `pidpc=$(eval $cmd)`.
+
+Now that we have everything we need to kill our process, let's provide a way so the 
+php can detect whether Pastecat is running or not. An easy and resulting way to do this
+is storing some useful data in a file and delete this file when pastecat is stopped.
+This way, we make sure that this file will only exists when Pastecat is running. This
+file will be created from the controller adding the following lines right below the
+sentence we mentioned in the previous paragraph:
+
+    # Writting server info to file
+    info="$pidpc http://$ip:$port"          # Separator is space character
+    echo $info > $PCFILE
+    
+where `$PCFILE` is `/var/run/pc.info`. Note that the content of this file will be the PID
+and the complete direction of our Pastecat server.
+
+Now we have a way to know if our server is up or down, so we can add the "stop" button in
+the web interfae. We will modify a little bit the php script that we had before, just by
+addind anther advertisement indicating whether Pastecat is up or down, and 2 more buttons
+if it is running. So, in our index function, within the condition that checks if Pastecat
+is installed we will have the following code:
+
+    $page .= "<div class='alert alert-success text-center'>".t("Pastecat is installed")."</div>\n";
+    if ( isRunning() ) {
+        $page .= "<div class='alert alert-success text-center'>".t("Pastecat is running")."</div>\n";
+        $page .= addButton(array('label'=>t('Go to server'),'href'=>'http://'. getCommunityIP()['output'][0] .':'. $port));
+        $page .= addButton(array('label'=>t('Stop server'),'href'=>$staticFile.'/pastecat/stop'));
+    } else  {
+        $page .= "<div class='alert alert-error text-center'>".t("Pastecat is not running")."</div>\n";
+    }
+    $page .= addButton(array('label'=>t('Create a Pastecat server'),'href'=>$staticFile.'/pastecat/publish'));
+
+In this piece of code, we can appreciate 2 new features in our code. The first one is a
+check function called `isRunning()`. This function looks very similar to the function we 
+used to check if Pastecat is installed:
+
+    function isRunning() {
+        // Returns whether pastecat is running or not
+        global $pcfile;
+    
+        return(file_exists($pcfile));   
+    }
+
+It is a simple as it seems, it just checks if the file we created when starting the server
+still exists. The second thing we can notice in the new php code is the existance of a new
+function called `stop`. This function will invoke another function in the controller which
+will stop the pastecat:
+
+    function stop() {
+        // Stops Pastecat server
+        global $pcpath,$pcprogram,$title,$pcutils,$avahi_type,$port;
+    
+        $page = "";
+        $cmd = $pcutils." stop ";
+        execute_program_detached($cmd);
+    
+        return(array('type'=>'redirect','url'=>$staticFile.'/pastecat'));
+    }
+
+In order to make the controller understand this order, we will modify the case and add the
+new function. In the `case` statement, we will add the following under the `install` option:
+
+    "stop")
+        shift
+        doStop $@
+        ;;
+
+This calls the function `doStop` within the controller. This function will look like this:
+
+    doStop() {
+        # Stopping pastecat server
+        pcpid=$(cat $PCFILE | cut -d' ' -f1)
+        kill $pcpid
+    
+        # Removing info file
+        rm $PCFILE
+    }
+
+This function just gets the pastecat's PID from the file we created before, kills the process
+and finally removes the file so the php scripts can know that pastecat is now down.
+
+Now we can create a pastecat instance server and stop it. However, there is still something
+missing: make the other users see our service. And this is why we are using avahi. 
 
 ## 4 Avahi service publishing
 
@@ -373,4 +463,17 @@ new file called `pastecat.avahi.php` which will contain this:
 
 This will create a button besides the avahi announcement line that will point to
 our server.
+
+Now that we have our service announced, we want it to dissappear when we stop the pastecat
+service. This last step is very simple yet important. It consist of a few lines in the php
+function called stop. Until now, this function just called the controller and stopped the 
+pastecat, but now it will also stop the avahi publication and show a flash comment so the
+user knwo it worked:
+
+    $temp = avahi_unpublish($avahi_type, $port);
+    $flash = ptxt($temp);
+    setFlash($flash);
+
+This lines will be added just after the `execute_program_detached($cmd)` sentence in the
+stop function.
 
