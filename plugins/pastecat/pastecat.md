@@ -11,30 +11,33 @@ very simple service showing snippets of code along the way.
 For the sake of simplicity, we will use
 [Pastecat](https://github.com/mvdan/pastecat). It is a good candidate because:
 
- * It is standalone and doesn't federate nor communicate with other nodes
- * Built with Go, it's easy to distribute and deploy
+ * It's a standalone program
+ * It only needs to be installed in one node (no federation/syncrhonization)
+ * It's Built with Go, it's easy to distribute and deploy
  * It doesn't need a configuration file nor any kind of setup
- * It is very lightweight on resources
+ * It's very lightweight on resources
 
 ## 1. Getting the binary
 
 The first thing we have to figure out is how to download and install the
 binary on Cloudy. Most software out there is already available as a package
 on Debian, but Pastecat isn't. If it were, it would be a matter of just
-running the command `apt-get install pastecat` from PHP.
+running the command `apt-get install pastecat` from PHP. Therefore we'll
+have to get it from someplace else.
 
-But since it isn't, we'll have to get it from someplace else. One option is to
-fetch the source and build it ourselves. But this often means that Cloudy
-should include a lot of build tools and libraries. In the case of Go, that
-would mean having its toolchain installed, which isn't very practical.
+One option is to fetch the source and build it ourselves. This often means,
+however, that Cloudy should include a lot of build tools and libraries. In the
+case of Go, that would mean having its toolchain installed, which isn't very
+practical.
 
-The better option if a debian package isn't available is to download binaries
-from upstream over HTTPS and preferably with digests or signatures. We can use
-Github's releases page for that. Both options leave us with an executable file
-that we should be able to run directly on Cloudy.
+A better option when the Debian package isn't available is to download the
+binary from upstream trusted sources via HTTPS and, preferably, checking digests
+or using signatures. We can use Github's releases page for that. Both options
+leave us with an executable file that we should be able to run directly on
+Cloudy.
 
-In this particular case We will download the binaries from the git repository
-with the following command line:
+In this particular case we are going to download the binaries from the git
+repository with the following command line:
 
     wget https://github.com/mvdan/pastecat/releases/download/v0.3.0/pastecat_linux_386
 
@@ -50,36 +53,38 @@ Note that having the service as a Debian package has many advantages:
 
 ## 2. Testing it out
 
-Before adding it as a service, we want to configure and start it up ourselves
-directly to see how it works and that it actually works. Understand what
-configuration options or command line options will we need to use for this
-service in particular, and how will we manage the service once it is running.
+Before adding Pastecat as a Cloudy service, we can configure and start it
+ourselves directly (i.e. manually), to see if it works and how. This way we
+can better understand what configuration options or command line parameters
+are we will need to run it as a service, and also to manage it once it is
+running.
 
 ## 3. Adding the controller
 
-In `web/plug/controllers` we have one PHP file per service, called the
-controller. This is the code that will run when we enter the services page on
+In `web/plug/controllers` we have one PHP file per service, which we call "the
+controller". This is the code that will run when we enter the services page on
 the Cloudy web interface.
 
 ### 3.1. Adding the index function
 
-Whe want our service integrated in the Cloudy web structure. In order to do this,
-a few php scripts need to be created and added to our device. Altgether, and by
-the time being, we'll need to create a total of 2 scripts: `pastecat.php` and
-`pastecat.menu.php`. The first one is the controller itself, this is, the script
+We also want our service to be integrated in the Cloudy web structure. To do this,
+a few PHP scripts need to be created and added to our device. Altogether, and by
+the time being, we'll need to create a total of 2 scripts: `pastecat.PHP` and
+`pastecat.menu.PHP`. The first one is the controller itself, this is, the script
 that renders the page and has all the information such as buttons or redirections.
-The other one is what allows our service to show up in the upper menu of Cloudy.
+The other one is what allows our service to show up in the upper menu bar of
+Cloudy's web interface.
 
 The menu code will look like this:
 
 
-    <?php
-    //peerstreamer.menu.php
+    <?PHP
+    //peerstreamer.menu.PHP
     addMenu('Pastecat','pastecat','Clommunity');
 
-By now, we'll use a very simple php script as the controller:
+By now, we'll use a very simple PHP script in the controller:
 
-    <?php
+    <?PHP
     //pastecat
     $title="Pastecat";
     
@@ -101,7 +106,7 @@ done this, we can go to our Cloudy system and access our new Pastecat.
 ### 3.2. Making the controller install the service
 
 As said before, this step is made much more easier if the service is packaged
-in Debian. Since pastecat isn't, we'll have to do it manually. This usually
+in Debian. Since Pastecat isn't, we'll have to do it manually. This usually
 involves a combination of `wget`, `mv` and `chmod`. It is generally a good
 idea to keep the service's files under `/opt/SERVICENAME`.
 
@@ -323,7 +328,7 @@ the Process ID (PID). Luckily for us, we already kept this number when we create
 pastecat server with `pidpc=$(eval $cmd)`.
 
 Now that we have everything we need to kill our process, let's provide a way so the 
-php can detect whether Pastecat is running or not. An easy and resulting way to do this
+PHP can detect whether Pastecat is running or not. An easy and resulting way to do this
 is storing some useful data in a file and delete this file when pastecat is stopped.
 This way, we make sure that this file will only exists when Pastecat is running. This
 file will be created from the controller adding the following lines right below the
@@ -337,7 +342,7 @@ where `$PCFILE` is `/var/run/pc.info`. Note that the content of this file will b
 and the complete direction of our Pastecat server.
 
 Now we have a way to know if our server is up or down, so we can add the "stop" button in
-the web interfae. We will modify a little bit the php script that we had before, just by
+the web interfae. We will modify a little bit the PHP script that we had before, just by
 addind anther advertisement indicating whether Pastecat is up or down, and 2 more buttons
 if it is running. So, in our index function, within the condition that checks if Pastecat
 is installed we will have the following code:
@@ -364,7 +369,7 @@ used to check if Pastecat is installed:
     }
 
 It is a simple as it seems, it just checks if the file we created when starting the server
-still exists. The second thing we can notice in the new php code is the existance of a new
+still exists. The second thing we can notice in the new PHP code is the existance of a new
 function called `stop`. This function will invoke another function in the controller which
 will stop the pastecat:
 
@@ -399,7 +404,7 @@ This calls the function `doStop` within the controller. This function will look 
     }
 
 This function just gets the pastecat's PID from the file we created before, kills the process
-and finally removes the file so the php scripts can know that pastecat is now down.
+and finally removes the file so the PHP scripts can know that pastecat is now down.
 
 Now we can create a pastecat instance server and stop it. However, there is still something
 missing: make the other users see our service. And this is why we are using avahi. 
@@ -409,7 +414,7 @@ missing: make the other users see our service. And this is why we are using avah
 On of the best things in Cloudy is the facility of publishing our service as a
 publication in the avahi network, allowing other users to know what we are
 offering and joining our service. To do this, we first need to add a few lines
-to the php controller, just after we've called the controller to start the 
+to the PHP controller, just after we've called the controller to start the 
 pastecat instance. We will add the following lines:
 
     $description = str_replace(' ', '', $description);
@@ -448,10 +453,10 @@ and program it so when clicked, it directly goes to our pastecat server.
 To do this there is a folder called `avahi` within the `plug` directory. The
 scripts that define the function carried on when the button is clicked are
 defined in different files within this directory, therefor we will create a
-new file called `pastecat.avahi.php` which will contain this:
+new file called `pastecat.avahi.PHP` which will contain this:
 
-    <?php
-    // plug/avahi/pastecat.avahi.php
+    <?PHP
+    // plug/avahi/pastecat.avahi.PHP
     
     addAvahi('pastecat','fpcserver');
     
@@ -465,7 +470,7 @@ This will create a button besides the avahi announcement line that will point to
 our server.
 
 Now that we have our service announced, we want it to dissappear when we stop the pastecat
-service. This last step is very simple yet important. It consist of a few lines in the php
+service. This last step is very simple yet important. It consist of a few lines in the PHP
 function called stop. Until now, this function just called the controller and stopped the 
 pastecat, but now it will also stop the avahi publication and show a flash comment so the
 user knwo it worked:
@@ -474,6 +479,6 @@ user knwo it worked:
     $flash = ptxt($temp);
     setFlash($flash);
 
-This lines will be added just after the `execute_program_detached($cmd)` sentence in the
+These lines will be added just after the `execute_program_detached($cmd)` sentence in the
 stop function.
 
